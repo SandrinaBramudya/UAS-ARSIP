@@ -9,12 +9,12 @@ use Carbon\Carbon;
 class DocumentController extends Controller
 {
     // GET: ambil semua dokumen
-    public function index()
-    {
-        return response()->json(
-            Document::latest()->get()
-        );
-    }
+    // public function index()
+    // {
+    //     return response()->json(
+    //         Document::latest()->get()
+    //     );
+    // }
 
     // POST: simpan dokumen baru
 
@@ -23,27 +23,25 @@ class DocumentController extends Controller
         $request->validate([
             'title' => 'required|string',
             'category' => 'required|string',
-            'file' => 'required|file|max:10240', // max 10MB
+            'file' => 'required|file|max:10240', // 10MB
         ]);
-    
+
         $file = $request->file('file');
-    
-        $filePath = $file->store('uploads/documents', 'public');
-        $fileSize = $file->getSize(); // BYTES
-        $fileDate = now(); // waktu upload
-    
+
         $document = Document::create([
+            'user_id' => $request->user()->id, // 🔑 otomatis
             'document_number' => $request->document_number,
             'title' => $request->title,
             'category' => $request->category,
             'unit' => $request->unit,
-            'document_date' => $fileDate,
-            'file_path' => $filePath,
-            'file_size' => $fileSize,
+            'document_date' => now(),
+            'file_path' => $file->store('uploads/documents', 'public'),
+            'file_size' => $file->getSize(),
         ]);
-    
+
         return response()->json($document, 201);
     }
+
     
 
     // DELETE: hapus dokumen
@@ -55,4 +53,14 @@ class DocumentController extends Controller
             'message' => 'Document deleted'
         ]);
     }
+    public function myDocuments(Request $request)
+    {
+        return Document::where('user_id', $request->user()->id)->get();
+    }
+
+    public function index()
+    {
+        return Document::all(); // ADMIN
+    }
+
 }
