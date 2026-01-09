@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "../services/api";
 import { saveAuth } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   FileText,
   Mail,
@@ -143,23 +144,43 @@ export default function AuthPages() {
     });
   };
 
+
 const handleSubmit = async (e) => {
   e.preventDefault();
 
   try {
     if (isLogin) {
-      // LOGIN
+      // ================= LOGIN =================
       const res = await api.post("/login", {
         email: formData.email,
         password: formData.password,
       });
 
+      // 🔍 DEBUG CONSOLE
+      console.group("LOGIN SUCCESS");
+      console.log("Response API:", res.data);
+      console.log("Token:", res.data.token);
+      console.log("User:", res.data.user);
+      console.log("Role:", res.data.user?.role);
+      console.groupEnd();
+
+      const userName = res.data.user?.name || "Pengguna";
+
       saveAuth(res.data);
-      navigate("/dashboard");
+
+      toast.success(`Selamat datang, ${userName} 👋`, {
+        description: "Login berhasil",
+        duration: 3000,
+      });
+
+    setTimeout(() => {
+      navigate("/dashboard", { replace: true });
+    }, 50);
+
     } else {
-      // REGISTER
+      // ================= REGISTER =================
       if (formData.password !== formData.confirmPassword) {
-        alert("Password tidak sama");
+        toast.error("Password tidak sama");
         return;
       }
 
@@ -171,14 +192,38 @@ const handleSubmit = async (e) => {
         role: "user",
       });
 
+      // 🔍 DEBUG CONSOLE
+      console.group("REGISTER SUCCESS");
+      console.log("Response API:", res.data);
+      console.log("User:", res.data.user);
+      console.log("Role:", res.data.user?.role);
+      console.groupEnd();
+
+      const userName = res.data.user?.name || "Pengguna";
+
       saveAuth(res.data);
-      navigate("/dashboard");
+
+      toast.success(`Akun ${userName} berhasil dibuat 🎉`, {
+        description: "Registrasi berhasil",
+        duration: 3000,
+      });
+    setTimeout(() => {
+      navigate("/dashboard", { replace: true });
+    }, 50);
     }
   } catch (error) {
-    console.error(error.response?.data || error);
-    alert(error.response?.data?.message || "Gagal autentikasi");
+    console.group("AUTH ERROR");
+    console.error("Error:", error.response?.data || error);
+    console.groupEnd();
+
+    toast.error("Gagal autentikasi", {
+      description:
+        error.response?.data?.message ||
+        "Email atau password salah",
+    });
   }
 };
+
     
 
   const features = [

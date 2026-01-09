@@ -1,32 +1,30 @@
 import { Navigate } from "react-router-dom";
-import AdminDashboard from "./AdminDashboard";
-import UserDashboard from "./UserDashboard";
 
 export default function DashboardGate() {
   const token = localStorage.getItem("token");
   const userRaw = localStorage.getItem("user");
 
-  // belum login sama sekali
-  if (!token || !userRaw || userRaw === "null") {
-    localStorage.clear();
+  console.log("DASHBOARD GATE", { token, userRaw });
+
+  if (!token || !userRaw) {
     return <Navigate to="/login" replace />;
   }
 
   let user;
   try {
     user = JSON.parse(userRaw);
-  } catch (e) {
+  } catch {
     localStorage.clear();
     return <Navigate to="/login" replace />;
   }
 
-  // guard FINAL
-  if (!user || !user.role) {
+  if (!user?.role) {
     localStorage.clear();
     return <Navigate to="/login" replace />;
   }
 
+  // ⬇️ PENTING: redirect, bukan render
   return user.role === "admin"
-    ? <AdminDashboard />
-    : <UserDashboard />;
+    ? <Navigate to="/dashboard/admin" replace />
+    : <Navigate to="/dashboard/user" replace />;
 }
